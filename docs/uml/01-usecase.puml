@@ -1,0 +1,41 @@
+@startuml
+title Қауіпсіз корпоративтік мессенджер - Use Case диаграммасы
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Пайдаланушы" as User
+actor "Әкімші" as Admin
+Admin --|> User
+
+rectangle "Мессенджер жүйесі" {
+  usecase "Тіркелу" as UC1
+  usecase "Жүйеге кіру (логин)" as UC2
+  usecase "Жеке хабарлама жіберу" as UC3
+  usecase "Топтық чатқа хабарлама жіберу" as UC4
+  usecase "Топтық чат құру" as UC5
+  usecase "RSA кілт жұбын жасау" as UC6
+  usecase "Хабарламаны шифрлау (AES+RSA)" as UC7
+  usecase "Хабарламаны дешифрлау" as UC8
+  usecase "Пайдаланушыларды басқару" as UC9
+  usecase "Рөлдерді тағайындау (RBAC)" as UC10
+  usecase "Аудит журналын көру" as UC11
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+
+UC1 ..> UC6 : <<include>>
+UC3 ..> UC7 : <<include>>
+UC4 ..> UC7 : <<include>>
+UC3 ..> UC8 : <<include>>
+UC4 ..> UC8 : <<include>>
+UC3 ..> UC2 : <<include>>
+UC4 ..> UC2 : <<include>>
+
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+title Sequence: Шифрланған хабарлама жіберу
+actor "Жіберуші (A)" as A
+participant "Клиент A" as CA
+participant "Сервер" as S
+database "БД" as DB
+participant "Клиент B" as CB
+actor "Алушы (B)" as B
+
+note over CA, S
+  Чат құрылғанда AES-256 чат кілті жасалады және
+  әр мүшенің RSA ашық кілтімен шифрланып
+  chat_members.encrypted_chat_key ішінде сақталады.
+end note
+
+A -> CA : мәтін жазады
+CA -> CA : чат кілтін жеке RSA кілтімен ашу (бір рет, кэште)
+CA -> CA : кездейсоқ iv жасау
+CA -> CA : мәтінді AES-256-GCM-мен шифрлау (ciphertext)
+CA -> S : POST /api/chats/{id}/messages (ciphertext, iv) (JWT, TLS)
+S -> S : JWT және чат мүшелігін тексеру
+S -> DB : тек шифрланған деректі сақтау
+S --> CB : WebSocket арқылы жеткізу (ciphertext, iv)
+CB -> CB : чат кілтімен хабарламаны дешифрлау
+CB --> B : мәтін көрсетіледі
+@enduml

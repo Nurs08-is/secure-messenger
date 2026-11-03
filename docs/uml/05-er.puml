@@ -1,0 +1,57 @@
+@startuml
+title Қауіпсіз корпоративтік мессенджер - ER диаграммасы
+hide circle
+skinparam linetype ortho
+
+entity "users" as users {
+  * id : BIGINT <<PK>>
+  --
+  * username : VARCHAR(50) <<unique>>
+  * password_hash : VARCHAR(100)
+  * public_key : TEXT
+  * role : VARCHAR(10)
+  * created_at : TIMESTAMP
+}
+
+entity "chats" as chats {
+  * id : BIGINT <<PK>>
+  --
+  * name : VARCHAR(100)
+  * is_group : BOOLEAN
+  * created_at : TIMESTAMP
+}
+
+entity "messages" as messages {
+  * id : BIGINT <<PK>>
+  --
+  * chat_id : BIGINT <<FK>>
+  * sender_id : BIGINT <<FK>>
+  * ciphertext : BYTEA
+  * iv : BYTEA
+  * sent_at : TIMESTAMP
+}
+
+entity "chat_members" as chat_members {
+  * id : BIGINT <<PK>>
+  --
+  * chat_id : BIGINT <<FK>>
+  * user_id : BIGINT <<FK>>
+  * encrypted_chat_key : BYTEA
+  * joined_at : TIMESTAMP
+}
+
+entity "audit_logs" as audit_logs {
+  * id : BIGINT <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  * action : VARCHAR(50)
+  details : TEXT
+  * timestamp : TIMESTAMP
+}
+
+chats ||--o{ messages
+chats ||--o{ chat_members
+users ||--o{ messages
+users ||--o{ chat_members
+users ||--o{ audit_logs
+@enduml

@@ -1,0 +1,125 @@
+@startuml
+title Қауіпсіз корпоративтік мессенджер - Class диаграммасы
+skinparam classAttributeIconSize 0
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+  AUDITOR
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
+  DEPARTMENT
+}
+
+class User {
+  - id: Long
+  - username: String
+  - passwordHash: String
+  - publicKey: String
+  - role: Role
+  - blocked: boolean
+  - createdAt: LocalDateTime
+}
+
+class Department {
+  - id: Long
+  - name: String
+}
+
+class Chat {
+  - id: Long
+  - name: String
+  - type: ChatType
+  - createdAt: LocalDateTime
+}
+
+class ChatMember {
+  - id: Long
+  - encryptedChatKey: byte[]
+  - joinedAt: LocalDateTime
+}
+
+class Message {
+  - id: Long
+  - ciphertext: byte[]
+  - iv: byte[]
+  - sentAt: LocalDateTime
+}
+
+class AuditLog {
+  - id: Long
+  - action: String
+  - details: String
+  - timestamp: LocalDateTime
+}
+
+class AuthService {
+  + register(username, password): User
+  + login(username, password): String
+  + validateToken(token): User
+}
+
+class ChatService {
+  + createChat(name, type, members): Chat
+  + sendMessage(chatId, ciphertext, iv): Message
+  + getHistory(chatId): List<Message>
+  + isMember(chatId, userId): boolean
+}
+
+class DepartmentService {
+  + createDepartmentChat(deptId): Chat
+  + addMember(deptId, userId): void
+  + removeMember(deptId, userId): void
+  + listMembers(deptId): List<User>
+}
+
+class AdminService {
+  + listUsers(): List<User>
+  + blockUser(userId): void
+  + changeRole(userId, role): void
+  + manageDepartments(): void
+}
+
+class AuditService {
+  + log(action, userId): void
+  + getAuditLogs(): List<AuditLog>
+}
+
+class CryptoService {
+  + generateRsaKeyPair(): KeyPair
+  + generateAesKey(): SecretKey
+  + encryptMessage(text, aesKey): EncryptedData
+  + decryptMessage(data, aesKey): String
+  + wrapKey(aesKey, publicKey): byte[]
+  + unwrapKey(wrapped, privateKey): SecretKey
+}
+
+User "1" --> "1" Role
+User "0..*" -- "0..1" Department : бөлім
+Department "1" -- "0..1" Chat : бөлім чаты
+Chat "1" --> "1" ChatType
+User "1" -- "0..*" ChatMember
+Chat "1" -- "1..*" ChatMember
+Chat "1" -- "0..*" Message
+User "1" -- "0..*" Message : sender
+User "1" -- "0..*" AuditLog
+
+AuthService ..> User
+ChatService ..> Chat
+ChatService ..> Message
+DepartmentService ..> Department
+AdminService ..> User
+AdminService ..> Department
+AuditService ..> AuditLog
+
+note right of Role
+  EMPLOYEE: чат жазады
+  MANAGER: өз бөлімін басқарады
+  ADMIN: пайдаланушылар мен рөлдер
+  AUDITOR: аудит журналын тек оқиды
+end note
+@enduml

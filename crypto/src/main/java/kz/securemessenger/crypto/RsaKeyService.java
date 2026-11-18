@@ -24,14 +24,14 @@ public class RsaKeyService {
                     PSource.PSpecified.DEFAULT
             );
 
-    // RSA-2048 ашық және жабық кілттерін жасау
+    
     public KeyPair generateKeyPair() throws GeneralSecurityException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048, new SecureRandom());
         return generator.generateKeyPair();
     }
 
-    // AES кілтін RSA ашық кілтімен шифрлау
+    
     public byte[] wrapKey(SecretKey aesKey, PublicKey publicKey)
             throws GeneralSecurityException {
 
@@ -43,7 +43,7 @@ public class RsaKeyService {
         return cipher.doFinal(aesKey.getEncoded());
     }
 
-    // RSA жабық кілті арқылы AES кілтін ашу
+   
     public SecretKey unwrapKey(byte[] encryptedKey, PrivateKey privateKey)
             throws GeneralSecurityException {
 

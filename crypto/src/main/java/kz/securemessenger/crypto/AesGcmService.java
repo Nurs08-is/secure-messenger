@@ -16,14 +16,14 @@ public class AesGcmService {
 
     private final SecureRandom random = new SecureRandom();
 
-    // AES-256 құпия кілтін жасау
+    
     public SecretKey generateKey() throws GeneralSecurityException {
         KeyGenerator generator = KeyGenerator.getInstance("AES");
         generator.init(256, random);
         return generator.generateKey();
     }
 
-    // Хабарламаны шифрлау
+    
     public EncryptedData encrypt(SecretKey key, String message)
             throws GeneralSecurityException {
 
@@ -40,7 +40,7 @@ public class AesGcmService {
         return new EncryptedData(iv, ciphertext);
     }
 
-    // Хабарламаны қайта ашу
+    
     public String decrypt(SecretKey key, EncryptedData data)
             throws GeneralSecurityException {
 

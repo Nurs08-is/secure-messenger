@@ -37,3 +37,22 @@ replay_pid*
 # Operating system
 .DS_Store
 Thumbs.db
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Security keys and certificates
+*.jks
+*.p12
+*.pfx
+*.key
+*.pem
+
+# Local database files
+*.mv.db
+*.trace.db
+
+# Application data
+data/
+keystore/

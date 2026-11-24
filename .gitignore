@@ -22,3 +22,37 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+# Maven build files
+**/target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Operating system
+.DS_Store
+Thumbs.db
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Security keys and certificates
+*.jks
+*.p12
+*.pfx
+*.key
+*.pem
+
+# Local database files
+*.mv.db
+*.trace.db
+
+# Application data
+data/
+keystore/

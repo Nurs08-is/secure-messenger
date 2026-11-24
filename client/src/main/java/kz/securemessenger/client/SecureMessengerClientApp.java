@@ -1,96 +1,247 @@
-
 package kz.securemessenger.client;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class SecureMessengerClientApp extends Application {
 
+    private Stage stage;
+
+    private final SessionManager session =
+            new SessionManager();
+
+    private final ApiClient api =
+            new ApiClient(session);
+
+    private ChatController chatController;
+
     @Override
     public void start(Stage stage) {
-        stage.setTitle("Secure Messenger");
-        showLogin(stage);
+
+        this.stage = stage;
+
+        stage.setTitle("Secure Corporate Messenger");
+
+        stage.setMinWidth(760);
+        stage.setMinHeight(520);
+
+        stage.setOnCloseRequest(event -> {
+            closeChat();
+            session.logout();
+        });
+
+        showLogin();
+
         stage.show();
     }
 
-    // Логин терезесі
-    private void showLogin(Stage stage) {
-        Label title = new Label("Secure Messenger");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+    private void showLogin() {
 
-        TextField username = new TextField();
-        username.setPromptText("Логин");
+        closeChat();
+        session.logout();
 
-        PasswordField password = new PasswordField();
-        password.setPromptText("Құпиясөз");
+        LoginController controller =
+                new LoginController(api, session);
 
-        Label error = new Label();
-        error.setStyle("-fx-text-fill: red;");
-
-        Button loginButton = new Button("Кіру");
-        loginButton.setMaxWidth(Double.MAX_VALUE);
-
-        loginButton.setOnAction(event -> {
-            if (username.getText().isBlank()
-                    || password.getText().isBlank()) {
-                error.setText("Логин мен құпиясөзді енгізіңіз!");
-            } else {
-                showChat(stage, username.getText().trim());
-            }
-        });
-
-        VBox layout = new VBox(
-                15, title, username, password, loginButton, error
-        );
-
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(30));
-
-        stage.setScene(new Scene(layout, 420, 350));
+        setView(controller.createView(
+                this::showDashboard,
+                this::showRegister
+        ));
     }
 
-    // Чат терезесі
-    private void showChat(Stage stage, String username) {
-        Label title = new Label("Қауіпсіз корпоративтік чат");
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+    private void showRegister() {
 
-        Label info = new Label("Демо нұсқа — серверге қосылмаған");
+        RegisterController controller =
+                new RegisterController(api);
 
-        ListView<String> messages = new ListView<>();
+        setView(controller.createView(
+                this::showLogin
+        ));
+    }
 
-        TextField messageInput = new TextField();
-        messageInput.setPromptText("Хабарлама жазыңыз...");
+    private void showDashboard() {
 
-        Button sendButton = new Button("Жіберу");
+        closeChat();
 
-        Runnable sendMessage = () -> {
-            String message = messageInput.getText().trim();
+        if (!session.isLoggedIn()) {
+            showLogin();
+            return;
+        }
 
-            if (!message.isEmpty()) {
-                messages.getItems().add(username + ": " + message);
-                messageInput.clear();
+        Label title = new Label("Secure Messenger");
+        title.getStyleClass().add("title");
+
+        Label welcome = new Label(
+                "Қош келдіңіз, "
+                        + session.getUsername());
+
+        Label role = new Label(
+                "Сіздің рөліңіз: "
+                        + session.getRole());
+
+        VBox root = new VBox(18);
+
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(40));
+        root.getStyleClass().add("auth-page");
+
+        root.getChildren().addAll(
+                title, welcome, role);
+
+        if (!session.hasRole("AUDITOR")
+                && session.getKeyPair() != null) {
+
+            root.getChildren().add(
+                    menuButton(
+                            "Хабарламалар",
+                            this::showChat));
+        }
+
+        if (session.hasRole("ADMIN")) {
+
+            root.getChildren().add(
+                    menuButton(
+                            "Әкімші панелі",
+                            this::showAdmin));
+        }
+
+        if (session.hasRole("HR")) {
+
+            root.getChildren().add(
+                    menuButton(
+                            "HR басқару панелі",
+                            this::showHr));
+        }
+
+        if (session.hasRole("AUDITOR")) {
+
+            root.getChildren().add(
+                    menuButton(
+                            "Аудит журналы",
+                            this::showAudit));
+        }
+
+        if (session.hasRole("MANAGER")) {
+
+            Label info = new Label(
+                    "Бөлім чаттарын хабарламалар "
+                            + "бөлімінен басқара аласыз");
+
+            info.setWrapText(true);
+
+            root.getChildren().add(info);
+        }
+
+        root.getChildren().add(
+                menuButton(
+                        "Аккаунттан шығу",
+                        this::showLogin));
+
+        setView(root);
+    }
+
+    private void showChat() {
+
+        closeChat();
+
+        chatController =
+                new ChatController(api, session);
+
+        setView(chatController.createView(
+                this::showLogin
+        ));
+    }
+
+    private void showAdmin() {
+
+        AdminController controller =
+                new AdminController(api);
+
+        setView(controller.createView(
+                this::showDashboard
+        ));
+    }
+
+    private void showHr() {
+
+        HrController controller =
+                new HrController(api);
+
+        setView(controller.createView(
+                this::showDashboard
+        ));
+    }
+
+    private void showAudit() {
+
+        AuditController controller =
+                new AuditController(api);
+
+        setView(controller.createView(
+                this::showDashboard
+        ));
+    }
+
+    private Button menuButton(
+            String text,
+            Runnable action) {
+
+        Button button = new Button(text);
+
+        button.setPrefWidth(320);
+
+        button.setOnAction(event ->
+                action.run());
+
+        return button;
+    }
+
+    private void setView(Parent root) {
+
+        if (stage.getScene() == null) {
+
+            Scene scene = new Scene(
+                    root, 1100, 720);
+
+            var css = getClass()
+                    .getResource("/style.css");
+
+            if (css != null) {
+
+                scene.getStylesheets().add(
+                        css.toExternalForm());
             }
-        };
 
-        sendButton.setOnAction(event -> sendMessage.run());
-        messageInput.setOnAction(event -> sendMessage.run());
+            stage.setScene(scene);
 
-        HBox inputBox = new HBox(10, messageInput, sendButton);
-        HBox.setHgrow(messageInput, Priority.ALWAYS);
+        } else {
 
-        VBox layout = new VBox(
-                15, title, info, messages, inputBox
-        );
+            stage.getScene().setRoot(root);
+        }
+    }
 
-        layout.setPadding(new Insets(20));
-        VBox.setVgrow(messages, Priority.ALWAYS);
+    private void closeChat() {
 
-        stage.setScene(new Scene(layout, 650, 480));
+        if (chatController != null) {
+
+            chatController.close();
+
+            chatController = null;
+        }
+    }
+
+    @Override
+    public void stop() {
+
+        closeChat();
+        session.logout();
     }
 
     public static void main(String[] args) {

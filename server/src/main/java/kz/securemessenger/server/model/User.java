@@ -29,6 +29,10 @@ public class User {
     @Column(nullable = false)
     private UserStatus status = UserStatus.PENDING;
 
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
     protected User() {
     }
 
@@ -63,11 +67,19 @@ public class User {
         return status;
     }
 
+    public Department getDepartment() {
+        return department;
+    }
+
     public void setRole(Role role) {
         this.role = role;
     }
 
     public void setStatus(UserStatus status) {
         this.status = status;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 }
